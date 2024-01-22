@@ -1,9 +1,13 @@
 """Module for representing a Castor datapoint in Python."""
 from datetime import datetime
+import json
 import typing
 import numpy as np
 import pandas as pd
 from castoredc_api import CastorException
+
+# Note: causes circular import
+#from castoredc_api.study.castor_objects.castor_grid_cell import CastorGridCell
 
 if typing.TYPE_CHECKING:
     from castoredc_api.study.castor_objects.castor_field import CastorField
@@ -72,6 +76,8 @@ class CastorDataPoint:
             interpreted_value = self.__interpret_time(study.configuration["time"])
         elif self.instance_of.field_type in ["numberdate"]:
             interpreted_value = self.__interpret_numberdate(study.configuration["date"])
+        elif self.instance_of.field_type in ["grid"]:
+            interpreted_value = self.__interpret_grid()
         else:
             interpreted_value = "Error"
         return interpreted_value
@@ -166,9 +172,14 @@ class CastorDataPoint:
             else:
                 new_value = "Missing value not recognized"
         else:
-            new_value = pd.Period(
-                datetime.strptime(self.raw_value, "%d-%m-%Y"), freq="D"
-            ).strftime(date_format)
+            try:
+                new_value = pd.Period(
+                    datetime.strptime(self.raw_value, "%d-%m-%Y"), freq="D"
+                ).strftime(date_format)
+            except ValueError:
+                new_value = pd.Period(
+                    datetime.strptime(self.raw_value, "%d-%m-%Y;%H:%M"), freq="S"
+                ).strftime("%d-%m-%Y;%H:%M")
 
         return new_value
 
@@ -331,6 +342,39 @@ class CastorDataPoint:
                     date_format
                 ),
             ]
+        return new_value
+
+    def __interpret_grid(self):
+        """Interprets values in a grid field."""
+        if self.raw_value == "" or self.instance_of.field_summary_template == "":
+            new_value = np.nan
+        else:
+            try:
+                rows_interpreted = []
+                grid_template = json.loads(self.instance_of.field_summary_template)
+                grid_rows = list(json.loads(self.raw_value).values())
+
+                # get the interpreted value of the grid cells by creating a
+                # CastorGridCell instance for each cell
+                for row_num, row in enumerate(grid_rows):
+                    field_type = grid_template['fieldTypes'][row_num]
+                    option_group = grid_template['optionLists'][row_num]
+
+                    # Note: causes circular import
+                    # rows_interpreted.append([CastorGridCell(
+                    #     self.field_id, self.instance_of.field_name, cell,
+                    #     field_type=field_type, option_group=option_group,
+                    #     study=self.study).value for cell in list(row.values())])
+
+                #grid_df = pd.DataFrame(rows_interpreted)
+                grid_df = pd.DataFrame(grid_rows)  # temp workaround
+                grid_df.columns = grid_template['columnNames']
+                grid_df.index = grid_template['rowNames']
+
+                new_value = grid_df
+            except:
+                new_value = "Error"
+
         return new_value
 
     # Standard Operators

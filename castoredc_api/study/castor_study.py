@@ -243,10 +243,12 @@ class CastorStudy:
             self.all_report_instances.items(),
             "Augmenting Report Data",
         ):
+            if report_instance is None: continue
             # Test if instance in study
             local_instance = self.get_single_form_instance_on_id(
                 instance_id=instance_id, record_id=report_instance["record_id"]
             )
+            if local_instance is None: continue
             local_instance.created_on = datetime.strptime(
                 report_instance["created_on"], "%Y-%m-%d %H:%M:%S"
             ).strftime(self.configuration["datetime_seconds"])
@@ -273,6 +275,9 @@ class CastorStudy:
             )
             field.field_max = (
                 math.inf if api_field["field_max"] is None else api_field["field_max"]
+            )
+            field.field_summary_template = (
+                None if not api_field["field_summary_template"] else api_field["field_summary_template"]
             )
 
     def __get_date_or_none(self, dictionary: Optional[dict]) -> Optional[datetime]:
@@ -540,6 +545,8 @@ class CastorStudy:
         instance_id: str,
     ) -> Optional["CastorFormInstance"]:
         """Returns a single form instance based on id."""
+        if self.get_single_record(record_id) is None:
+            return None
         return self.get_single_record(record_id).get_single_form_instance_on_id(
             instance_id
         )
