@@ -30,6 +30,7 @@ class CastorField:
         self.field_dependency = None
         self.field_max = None
         self.field_min = None
+        self.field_summary_template = None
 
     # Standard Operators
     def __eq__(self, other: Any) -> Union[bool, type(NotImplemented)]:
