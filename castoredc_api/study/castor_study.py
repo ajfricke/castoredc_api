@@ -546,7 +546,6 @@ class CastorStudy:
     ) -> Optional["CastorFormInstance"]:
         """Returns a single form instance based on id."""
         if self.get_single_record(record_id) is None:
-            print(record_id)
             return None
         return self.get_single_record(record_id).get_single_form_instance_on_id(
             instance_id
