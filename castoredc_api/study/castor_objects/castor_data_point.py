@@ -421,8 +421,8 @@ class CastorDataPoint:
                     )
 
                 grid_df = pd.DataFrame(cols_interpreted).T
-                grid_df.columns = col_names
-                grid_df.index = row_names
+                grid_df.columns = [col.strip() for col in col_names]
+                grid_df.index = [row.strip() for row in row_names]
 
                 new_value = grid_df
             except:
