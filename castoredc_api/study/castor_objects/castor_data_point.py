@@ -5,7 +5,6 @@ import typing
 import numpy as np
 import pandas as pd
 from castoredc_api import CastorException
-#from castoredc_api.study.castor_objects.castor_grid_cell import CastorGridCell
 from castoredc_api.study.castor_objects.castor_field import CastorField
 
 if typing.TYPE_CHECKING:
@@ -348,7 +347,6 @@ class CastorDataPoint:
             ]
         return new_value
 
-    import re
     def __interpret_grid(self, study):
         """Interprets values in a grid field."""
         if self.raw_value == "" or self.instance_of.field_summary_template == "":
@@ -362,21 +360,8 @@ class CastorDataPoint:
                 try:
                     grid_rows = list(json.loads(self.raw_value).values())
                 except json.decoder.JSONDecodeError:
-                    # attempt to fix broken json
-                    #print("Attempting to fix broken JSON.")
-                    # TODO: fix manually for now
+                    # fix manually for now
                     print(f"Broken JSON: {self.raw_value}")
-
-                    # fixed_json = (
-                    #     re.sub(
-                    #         r'(?<=: )"{2,}(.*?){2,}(?=[:,}])',
-                    #         r'"\1"',
-                    #         self.raw_value
-                    #         .replace('\\', '')
-                    #         .replace('""', '"')
-                    #     ).rstrip('"')
-                    # )
-                    # grid_rows = json.loads(fixed_json).values()
 
                 raw_grid_df = pd.DataFrame(grid_rows)
 
@@ -403,8 +388,7 @@ class CastorDataPoint:
                         row_names = grid_template['rowNames']
                         col_names = grid_template['columnNames']
 
-                # get the interpreted value of the grid cells by creating a
-                # CastorGridCell instance for each cell
+                # get the interpreted value of the grid cells
                 for col_num, col in enumerate(raw_grid_df.columns):
                     col_data = raw_grid_df[col].tolist()
 
