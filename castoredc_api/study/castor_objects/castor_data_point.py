@@ -9,7 +9,7 @@ from castoredc_api import CastorException
 from castoredc_api.study.castor_objects.castor_field import CastorField
 
 if typing.TYPE_CHECKING:
-    
+
     from castoredc_api.study.castor_study import CastorStudy
 
 
@@ -99,9 +99,14 @@ class CastorDataPoint:
             else:
                 new_value = "Missing value not recognized"
         else:
-            new_value = (
-                datetime.strptime(self.raw_value, "%H:%M").time().strftime(time_format)
-            )
+            try:
+                new_value = (
+                    datetime.strptime(self.raw_value, "%H:%M").time().strftime(time_format)
+                )
+            except ValueError:
+                new_value = (
+                    datetime.strptime(self.raw_value, "%H:%M:%S").time().strftime(time_format)
+                )
         return new_value
 
     def __interpret_datetime(self, datetime_format: str):
@@ -361,11 +366,11 @@ class CastorDataPoint:
                     #print("Attempting to fix broken JSON.")
                     # TODO: fix manually for now
                     print(f"Broken JSON: {self.raw_value}")
-                    
+
                     # fixed_json = (
                     #     re.sub(
-                    #         r'(?<=: )"{2,}(.*?){2,}(?=[:,}])', 
-                    #         r'"\1"', 
+                    #         r'(?<=: )"{2,}(.*?){2,}(?=[:,}])',
+                    #         r'"\1"',
                     #         self.raw_value
                     #         .replace('\\', '')
                     #         .replace('""', '"')
